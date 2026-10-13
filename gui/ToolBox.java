@@ -25,8 +25,12 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import logic.DrawingController;
-import logic.Tool;
+import model.FillableShape;
+import model.Shape;
+import model.ShapeVisitorAdapter;
+import model.Text;
+import controller.DrawingController;
+import controller.Tool;
 
 public class ToolBox extends JToolBar implements ActionListener,
 		ChangeListener, ItemListener {
@@ -53,7 +57,6 @@ public class ToolBox extends JToolBar implements ActionListener,
 					setVisible(false);
 					tb.setColor(colorChooser.getColor());
 					c.colorSelectedShapes(colorChooser.getColor());
-					c.getDrawing().repaint();
 				}
 			});
 			cancelButton.addActionListener(new ActionListener() {
@@ -67,6 +70,9 @@ public class ToolBox extends JToolBar implements ActionListener,
 	private static final long serialVersionUID = 1L;
 
 	private boolean fill;
+	// true while the controls are updated from a selected shape, so that
+	// the change is not applied back to the selection
+	private boolean showingProperties;
 	private DrawingController c;
 	private ButtonGroup buttons;
 	private JToggleButton select;
@@ -80,12 +86,11 @@ public class ToolBox extends JToolBar implements ActionListener,
 	private JCheckBox fillCheckBox;
 	private JSpinner fontSpinner;
 
-	public Color color;
+	private Color color;
 
 	public ToolBox(DrawingController c) {
 		super("Tools", VERTICAL);
 		this.c = c;
-		// tool = Tool.LINE;
 		color = Color.BLACK;
 
 		select = new JToggleButton(new ImageIcon("img/cursor.png"));
@@ -168,8 +173,7 @@ public class ToolBox extends JToolBar implements ActionListener,
 			c.setTool(Tool.SELECT);
 		}
 		else if (!source.equals(colorbutton)) {
-			c.getSelection().empty();
-			c.getDrawing().repaint();
+			c.clearSelection();
 		}
 
 		if (source.equals(circle)) {
@@ -212,16 +216,36 @@ public class ToolBox extends JToolBar implements ActionListener,
 	 * clicked.
 	 */
 	public void itemStateChanged(ItemEvent e) {
-		if (e.getStateChange() == ItemEvent.DESELECTED) {
-			fill = false;
-		}
-		else {
-			fill = true;
-		}
+		fill = (e.getStateChange() == ItemEvent.SELECTED);
 
-		c.toggleFilled();
-		c.getDrawing().repaint();
+		if (!showingProperties) {
+			c.setFilledSelectedShapes(fill);
+		}
+	}
 
+	/**
+	 * Shows the properties of a newly selected shape in the tool box.
+	 * 
+	 * @param withFill
+	 *            whether the fill status should also be shown
+	 */
+	public void showProperties(Shape s, final boolean withFill) {
+		showingProperties = true;
+		setColor(s.getColor());
+		s.accept(new ShapeVisitorAdapter() {
+			@Override
+			public void visitFillable(FillableShape fs) {
+				if (withFill) {
+					setFill(fs.isFilled());
+				}
+			}
+
+			@Override
+			public void visitText(Text t) {
+				setFontSize(t.getFontSize());
+			}
+		});
+		showingProperties = false;
 	}
 
 	public void setColor(Color c) {

@@ -1,0 +1,47 @@
+@startuml
+!include _style.iuml
+title ДО: Издатель–Подписчик (что есть в программе)
+
+package "Swing (издатели — компоненты GUI)" #EEF3FB {
+  class JMenuItem
+  class JToggleButton
+  class JCheckBox
+  class "Drawing (JPanel)" as DrawingPanel
+}
+interface ActionListener {
+  + actionPerformed(e)
+}
+interface ItemListener {
+  + itemStateChanged(e)
+}
+abstract class MouseAdapter {
+  + mousePressed(e) ...
+}
+class MenuListener
+class ToolBox
+class MouseListener
+
+ActionListener <|.. MenuListener
+ActionListener <|.. ToolBox
+ItemListener <|.. ToolBox
+MouseAdapter <|-- MouseListener
+JMenuItem o--> ActionListener : addActionListener
+JToggleButton o--> ActionListener
+JCheckBox o--> ItemListener
+DrawingPanel o--> MouseAdapter : addMouseListener
+
+package "Модель (издателей нет)" #FDECEC {
+  class Drawing
+  class Selection
+  class Shape
+}
+note bottom of Drawing
+  <b>Проблемы:</b>
+  * Подписчик используется только для событий Swing (ввод пользователя)
+  * Модель (Drawing, Shape, Selection) не сообщает об изменениях —
+    нет интерфейсов-подписчиков, списка подписчиков, метода оповещения
+  * после каждого изменения код вручную вызывает drawing.repaint()
+    (DrawingController, MenuListener, ToolBox, MouseListener — 11 мест)
+  * DrawingController напрямую вызывает gui.updateDrawing()
+end note
+@enduml

@@ -1,0 +1,66 @@
+@startuml
+!include _style.iuml
+title ПОСЛЕ: Модель по принципам ООП
+
+abstract class Shape {
+  - point1 : Point
+  - point2 : Point
+  - color : Color
+  - strokeWidth : double
+  + {abstract} accept(v : ShapeVisitor)
+  + getPoint1() : Point <<копия>>
+  + setPoint2(p : Point) <<копия + оповещение>>
+  + move(dx, dy)
+  + includes(p) : boolean
+}
+abstract class FillableShape {
+  - filled : boolean
+  + FillableShape(x, y, filled)
+  + isFilled() / setFilled(f)
+}
+class Line {
+  + accept(v) { v.visitLine(this) }
+}
+class Rectangle {
+  + accept(v) { v.visitRectangle(this) }
+}
+class Circle {
+  + accept(v) { v.visitCircle(this) }
+}
+class Text {
+  - text : String
+  - font : Font
+  + setPoint2(p) <<размер по тексту>>
+}
+interface ShapeVisitor
+abstract class ShapeVisitorAdapter {
+  + visitFillable(s)
+}
+class ShapePainter <<gui>>
+class ShapeWriter <<io>>
+class "FillAction (анонимный адаптер)" as FA <<actions>>
+class "ToolBox.showProperties (адаптер)" as TB <<gui>>
+
+Shape <|-- FillableShape
+Shape <|-- Line
+Shape <|-- Text
+FillableShape <|-- Rectangle
+FillableShape <|-- Circle
+Shape ..> ShapeVisitor : accept
+ShapeVisitor <|.. ShapeVisitorAdapter
+ShapeVisitor <|.. ShapePainter
+ShapeVisitor <|.. ShapeWriter
+ShapeVisitorAdapter <|-- FA
+ShapeVisitorAdapter <|-- TB
+
+note right of Shape
+  <b>Инкапсуляция:</b> все поля private, геттеры отдают копии Point,
+  сеттеры копируют аргумент; изменения — только через методы.
+  <b>Наследование:</b> FillableShape получает filled через конструктор.
+  <b>Полиморфизм:</b> двойная диспетчеризация accept()/visitX() вместо
+  instanceof (рисование, сохранение, заливка, панель инструментов).
+  <b>Абстракция / SRP:</b> фигура — только данные и поведение модели;
+  рисование — ShapePainter, формат файла — ShapeWriter,
+  ввод текста — MouseListener (GUI), выделение — Selection.
+end note
+@enduml

@@ -1,7 +1,7 @@
 package actions;
 
-import logic.Drawing;
-import shapes.Shape;
+import model.Drawing;
+import model.Shape;
 
 /**
  * AddAction implements a single undoable action where a Shape is added to a
@@ -9,8 +9,8 @@ import shapes.Shape;
  */
 public class AddAction implements DrawAction {
 
-	Drawing d;
-	Shape s;
+	private final Drawing d;
+	private final Shape s;
 
 	/**
 	 * Creates an AddAction that adds the given Shape to the given Drawing.
@@ -30,7 +30,7 @@ public class AddAction implements DrawAction {
 	}
 
 	public String getDescription() {
-		return null;
+		return "Add shape";
 	}
 
 	public void redo() {

@@ -1,0 +1,46 @@
+@startuml
+!include _style.iuml
+title ДО: паттерн Итератор
+
+interface "Iterable<Shape>" as Iterable {
+  + iterator() : Iterator<Shape>
+}
+interface "Iterator<Shape>" as Iterator {
+  + hasNext() : boolean
+  + next() : Shape
+  + remove()
+}
+class Drawing <<JPanel>> {
+  - shapes : ArrayList<Shape>
+  + iterator() : Iterator<Shape>
+}
+class Selection {
+  - selected : ArrayList<Shape>
+  + iterator() : Iterator<Shape>
+}
+class "ArrayList.Itr" as Itr <<java.util>>
+
+Iterable <|.. Drawing
+Iterable <|.. Selection
+Iterator <|.. Itr
+Drawing ..> Itr : return shapes.iterator()
+Selection ..> Itr : return selected.iterator()
+
+class DrawingController
+class DrawIO
+class DeleteAction
+DrawingController ..> Drawing : for (Shape s : drawing)
+DrawIO ..> Drawing : for (Shape s : drawing)
+DeleteAction ..> Selection : for (Shape s : selection)
+
+note bottom of Itr
+  <b>Проблемы:</b>
+  * клиенту отдаётся итератор внутреннего ArrayList:
+    через it.remove() можно удалить фигуру в обход
+    Drawing.removeShape() (нарушение инкапсуляции)
+  * собственного класса-итератора нет — паттерн
+    реализован только формально (делегирование)
+  * getShapeAt() и paintComponent() обходят список
+    напрямую по индексу/foreach по полю shapes
+end note
+@enduml

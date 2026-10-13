@@ -1,44 +1,50 @@
 package actions;
 
-import logic.Drawing;
-import logic.Selection;
-import shapes.Shape;
+import java.util.ArrayList;
+import java.util.List;
+
+import model.Drawing;
+import model.Shape;
 
 /**
- * DeleteAction implements a single undoable action where all Shapes in a given
- * Selection are added to a Drawing.
+ * DeleteAction implements a single undoable action where a group of Shapes is
+ * removed from a Drawing.
  */
 public class DeleteAction implements DrawAction {
 
-	Drawing d;
-	Selection selection;
-
-	int position;
+	private final Drawing d;
+	private final List<Shape> shapes = new ArrayList<Shape>();
+	private final List<Integer> positions = new ArrayList<Integer>();
 
 	/**
-	 * Creates an DeleteAction that removes all shapes in the given Selection
-	 * from the given Drawing.
+	 * Creates a DeleteAction that removes the given shapes from the given
+	 * Drawing.
 	 * 
 	 * @param drawing
-	 *            the drawing into which the shape should be added.
-	 * @param selection
-	 *            the shape to be added.
+	 *            the drawing from which the shapes should be removed.
+	 * @param toDelete
+	 *            the shapes to be removed.
 	 */
-	public DeleteAction(Drawing drawing, Selection selection) {
-		// The selection need to be hard-copied because the selection behind the
-		// reference will change while editing the drawing.
-		this.selection = selection.clone();
+	public DeleteAction(Drawing drawing, List<Shape> toDelete) {
 		this.d = drawing;
+		// Remember the shapes in z-order, so undo() can put every shape back
+		// to its original position.
+		for (Shape s : drawing) {
+			if (toDelete.contains(s)) {
+				shapes.add(s);
+				positions.add(drawing.indexOf(s));
+			}
+		}
 	}
 
 	public void execute() {
-		for (Shape s : selection) {
+		for (Shape s : shapes) {
 			d.removeShape(s);
 		}
 	}
 
 	public String getDescription() {
-		return null;
+		return "Delete shapes";
 	}
 
 	public void redo() {
@@ -46,8 +52,8 @@ public class DeleteAction implements DrawAction {
 	}
 
 	public void undo() {
-		for (Shape s : selection) {
-			d.insertShape(s);
+		for (int i = 0; i < shapes.size(); i++) {
+			d.insertShape(positions.get(i), shapes.get(i));
 		}
 	}
 

@@ -1,0 +1,55 @@
+@startuml
+!include _style.iuml
+title ПОСЛЕ: паттерн Итератор
+
+interface "Iterable<Shape>" as Iterable <<Aggregate>> {
+  + iterator() : Iterator<Shape>
+}
+interface "Iterator<Shape>" as Iterator <<Iterator>> {
+  + hasNext() : boolean
+  + next() : Shape
+  + remove()
+}
+class Drawing <<ConcreteAggregate>> {
+  - shapes : List<Shape>
+  - modCount : int
+  + iterator() : Iterator<Shape>
+}
+class "Drawing.ShapeIterator" as SI <<ConcreteIterator>> {
+  - next : int
+  - expectedModCount : int
+  + hasNext() : boolean
+  + next() : Shape
+  + remove() <<UnsupportedOperationException>>
+  - checkForModification()
+}
+class Selection <<ConcreteAggregate>> {
+  - selected : List<Shape>
+  + iterator() : Iterator<Shape>
+}
+class "unmodifiableList(selected).iterator()" as UI <<ConcreteIterator>>
+
+Iterable <|.. Drawing
+Iterable <|.. Selection
+Iterator <|.. SI
+Iterator <|.. UI
+Drawing +-- SI
+Drawing ..> SI : <<create>>
+Selection ..> UI : <<create>>
+
+class DrawingPanel <<Client>>
+class DrawingFile <<Client>>
+class DrawingController <<Client>>
+DrawingPanel ..> Iterable : for (Shape s : drawing)\nfor (Shape s : selection)
+DrawingFile ..> Iterable : for (Shape s : drawing)
+DrawingController ..> Iterable
+
+note bottom of SI
+  * собственный класс-итератор (внутренний класс Drawing),
+    клиенты не знают, что внутри — ArrayList
+  * remove() запрещён: удаление только через
+    Drawing.removeShape(), который оповещает подписчиков
+  * fail-fast: изменение рисунка во время обхода →
+    ConcurrentModificationException
+end note
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+!pragma teoz true
+skinparam dpi 150
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+skinparam noteBackgroundColor #FFF4D6
+title ПОСЛЕ: отмена действия (Ctrl+Z) — вид обновляется по оповещению
+
+actor Пользователь
+participant "MenuListener" as ML
+participant "DrawingController" as C
+participant "UndoManager" as UM
+participant "AddAction" as A
+participant "Drawing\n<<Publisher>>" as D
+participant "Selection\n<<Subscriber>>" as S
+participant "DrawingPanel\n<<Subscriber>>" as V
+
+Пользователь -> ML : actionPerformed("Undo")
+ML -> C : undo()
+C -> UM : undo()
+UM -> A : undo()
+A -> D : removeShape(s)
+D -> D : shapes.remove(s)\ns.removeShapeListener(this)
+D -> D : fire(SHAPE_REMOVED, s)
+D -> S : drawingChanged(e)
+S -> S : remove(s) → fireSelectionChanged()
+S -> V : selectionChanged(selection)
+V -> V : repaint()
+D -> V : drawingChanged(e)
+V -> V : repaint()
+note over C
+  Контроллер ничего не знает о виде
+  и не вызывает repaint()
+end note
+@enduml

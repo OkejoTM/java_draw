@@ -1,0 +1,60 @@
+@startuml
+!include _style.iuml
+title ДО: нарушения принципов ООП в Модели
+
+abstract class Shape {
+  # point1 : Point
+  # point2 : Point
+  # color : Color
+  # selected : boolean
+  + draw(g : Graphics)
+  + setPoint2(p : Point)  <<хранит чужую ссылку>>
+  + toString()  <<формат файла>>
+}
+abstract class FillableShape {
+  # filled : boolean
+  + drawShape(g : Graphics)
+}
+class Rectangle {
+  + Rectangle(x, y, filled)  <<this.filled = filled>>
+}
+class Text {
+  + Text(x, y, size) <<JOptionPane>>
+  + drawShape(g) <<setPoint2(...)>>
+}
+class FillAction {
+  + execute() <<instanceof FillableShape>>
+}
+class MouseListener {
+  + mousePressed() <<instanceof FillableShape, Text>>
+}
+class DrawIO {
+  + open() <<if "rect" / "circ" / ...>>
+}
+Shape <|-- FillableShape
+FillableShape <|-- Rectangle
+Shape <|-- Text
+FillAction ..> FillableShape
+MouseListener ..> Text
+DrawIO ..> Shape
+
+note right of Shape
+  <b>Инкапсуляция:</b> protected-поля, подклассы и
+  внешние классы меняют состояние напрямую;
+  setPoint1/2 сохраняют переданный Point (алиасинг);
+  ToolBox.color — public; поля действий — package-private.
+  <b>Единственная ответственность:</b> фигура одновременно
+  хранит данные, рисует себя (Graphics), задаёт формат
+  файла (toString) и хранит состояние выделения (selected).
+end note
+note right of Text
+  Модель обращается к GUI (JOptionPane);
+  рисование изменяет модель (point2).
+end note
+note bottom of FillAction
+  <b>Полиморфизм:</b> вместо виртуальных вызовов —
+  проверки instanceof и приведения типов.
+  <b>Ошибки:</b> Drawing.lower() ничего не делает,
+  raise() опускает фигуру; Tool.SQUARE не используется.
+end note
+@enduml

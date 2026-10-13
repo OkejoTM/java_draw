@@ -6,14 +6,16 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import logic.DrawIO;
-import logic.DrawingController;
+import controller.DrawingController;
 
 /**
  * Listens to actions from the buttons in a menu and modifies the Drawing
@@ -24,23 +26,24 @@ import logic.DrawingController;
  */
 public class MenuListener implements ActionListener {
 
-	DrawingController controller;
-	JFileChooser fileDialog;
+	private final DrawingController controller;
+	private final DrawingPanel view;
+	private JFileChooser fileDialog;
 
-	public MenuListener(DrawingController c) {
+	public MenuListener(DrawingController c, DrawingPanel view) {
 		this.controller = c;
+		this.view = view;
+	}
+
+	private static void showError(String message, IOException e) {
+		JOptionPane.showMessageDialog(null, message + "\n" + e.getMessage(),
+				"Error", JOptionPane.ERROR_MESSAGE);
 	}
 
 	public void actionPerformed(ActionEvent e) {
 		String cmd = e.getActionCommand();
-		DrawIO fio = new DrawIO();
-
 		if (cmd.equals("Quit")) {
 			System.exit(0);
-		}
-
-		else if (cmd.equals("Save")) {
-			controller.getDrawing().listShapes();
 		}
 
 		else if (cmd.equals("Undo")) {
@@ -57,8 +60,7 @@ public class MenuListener implements ActionListener {
 		}
 
 		else if (cmd.equals("Clear selection")) {
-			controller.getSelection().empty();
-			controller.getDrawing().repaint();
+			controller.clearSelection();
 		}
 
 		else if (cmd.equals("Delete")) {
@@ -76,7 +78,12 @@ public class MenuListener implements ActionListener {
 			fileDialog.showOpenDialog(null);
 			File f = fileDialog.getSelectedFile();
 			if (f != null) {
-				fio.open(f, controller);
+				try {
+					controller.open(f);
+				}
+				catch (IOException ex) {
+					showError("Could not open the drawing.", ex);
+				}
 			}
 
 		}
@@ -95,7 +102,12 @@ public class MenuListener implements ActionListener {
 
 			File f = fileDialog.getSelectedFile();
 			if (f != null) {
-				fio.save(f, controller);
+				try {
+					controller.save(f);
+				}
+				catch (IOException ex) {
+					showError("Could not save the drawing.", ex);
+				}
 			}
 		}
 
@@ -112,7 +124,12 @@ public class MenuListener implements ActionListener {
 
 			File f = fileDialog.getSelectedFile();
 			if (f != null) {
-				fio.export(f, controller);
+				try {
+					ImageIO.write(view.getImage(), "png", f);
+				}
+				catch (IOException ex) {
+					showError("Could not export the drawing.", ex);
+				}
 			}
 
 		}
@@ -120,9 +137,8 @@ public class MenuListener implements ActionListener {
 		else if (cmd.equals("New")) {
 			NewDrawingDialog diag = new NewDrawingDialog();
 			Dimension size = diag.getNewSize();
-			System.out.println(size);
 			if (size != null) {
-				controller.newDrawing(size);
+				controller.newDrawing(size.width, size.height);
 			}
 		}
 

@@ -61,6 +61,14 @@ public class UndoManager {
 	}
 
 	/**
+	 * Forgets all recorded actions (used when a new drawing is started).
+	 */
+	public void clear() {
+		this.undoStack.clear();
+		this.redoStack.clear();
+	}
+
+	/**
 	 * Redoes one action from the redo stack. The redone action then is moved to
 	 * the undo stack.
 	 */

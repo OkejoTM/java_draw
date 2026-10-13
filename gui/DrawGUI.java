@@ -11,8 +11,11 @@ import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import logic.Drawing;
-import logic.DrawingController;
+import model.Drawing;
+import model.DrawingEvent;
+import model.DrawingListener;
+import model.Selection;
+import controller.DrawingController;
 
 /**
  * Graphical user interface for the Drawing editor "Draw"
@@ -21,34 +24,7 @@ import logic.DrawingController;
  * 
  */
 
-public class DrawGUI extends JFrame {
-
-	/**
-	 * A simple container that contains a Drawing instance and keeps it
-	 * centered.
-	 * 
-	 * @author Alex Lagerstedt
-	 * 
-	 */
-	private class DrawingContainer extends JPanel {
-
-		private static final long serialVersionUID = 0;
-
-		public DrawingContainer() {
-			super(new GridBagLayout());
-		}
-
-		public void setDrawing(Drawing d) {
-			this.removeAll();
-			this.add(d);
-			mouse = new MouseListener(controller, tools);
-			d.addMouseListener(mouse);
-			d.addMouseMotionListener(mouse);
-			setPreferredSize(d.getPreferredSize());
-			pack();
-		}
-
-	}
+public class DrawGUI extends JFrame implements DrawingListener {
 
 	public class StatusBar extends JLabel {
 
@@ -66,8 +42,7 @@ public class DrawGUI extends JFrame {
 	}
 
 	private DrawingController controller;
-	private DrawingContainer drawingContainer;
-	private MouseListener mouse;
+	private DrawingPanel drawingPanel;
 	private ToolBox tools;
 	private JScrollPane scrollpane;
 
@@ -90,12 +65,28 @@ public class DrawGUI extends JFrame {
 		setIconImage(Toolkit.getDefaultToolkit().getImage("img/logo.png"));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		drawingContainer = new DrawingContainer();
-		scrollpane = new JScrollPane(drawingContainer);
+		// Model
+		Drawing drawing = new Drawing(500, 380);
+		Selection selection = new Selection(drawing);
 
-		controller = new DrawingController(this);
+		// Controller
+		controller = new DrawingController(drawing, selection);
+
+		// Views
+		drawingPanel = new DrawingPanel(drawing, selection);
 		tools = new ToolBox(controller);
-		controller.newDrawing(new Dimension(500, 380));
+
+		MouseListener mouse = new MouseListener(controller, tools);
+		drawingPanel.addMouseListener(mouse);
+		drawingPanel.addMouseMotionListener(mouse);
+
+		// A simple container that keeps the drawing centered.
+		JPanel drawingContainer = new JPanel(new GridBagLayout());
+		drawingContainer.add(drawingPanel);
+		scrollpane = new JScrollPane(drawingContainer);
+		updateScrollPaneSize();
+
+		drawing.addDrawingListener(this);
 
 		// statusBar = new StatusBar();
 
@@ -103,7 +94,8 @@ public class DrawGUI extends JFrame {
 		getContentPane().add(scrollpane, BorderLayout.CENTER);
 		// getContentPane().add(statusBar, BorderLayout.SOUTH);
 
-		MenuListener mainMenuListener = new MenuListener(controller);
+		MenuListener mainMenuListener = new MenuListener(controller,
+				drawingPanel);
 		JMenuBar mainMenu = new MainMenu(mainMenuListener);
 		this.setJMenuBar(mainMenu);
 
@@ -113,16 +105,19 @@ public class DrawGUI extends JFrame {
 	}
 
 	/**
-	 * Updates the GUI to show the Drawing instance that is currently controlled
-	 * by the DrawingController.
+	 * Resizes the window when a new drawing with another size is started.
 	 */
-	public void updateDrawing() {
+	@Override
+	public void drawingChanged(DrawingEvent event) {
+		if (event.getType() == DrawingEvent.Type.DRAWING_RESET) {
+			updateScrollPaneSize();
+			pack();
+		}
+	}
 
-		drawingContainer.setDrawing(controller.getDrawing());
-		scrollpane.setPreferredSize(new Dimension(drawingContainer
-				.getPreferredSize().width + 100, drawingContainer
-				.getPreferredSize().height + 100));
-		pack();
-		repaint();
+	private void updateScrollPaneSize() {
+		Dimension d = drawingPanel.getPreferredSize();
+		scrollpane.setPreferredSize(new Dimension(d.width + 100,
+				d.height + 100));
 	}
 }

@@ -1,0 +1,47 @@
+@startuml
+!include _style.iuml
+title ПОСЛЕ: пакеты и зависимости (Модель отделена)
+
+package "gui (Вид + обработка ввода)" as gui #EEF3FB {
+  class DrawGUI
+  class DrawingPanel
+  class ShapePainter
+  class MouseListener
+  class MenuListener
+  class ToolBox
+}
+package "controller" as controller #EAF7EA {
+  class DrawingController
+  enum Tool
+}
+package "actions (команды undo/redo)" as actions #F2F2F2 {
+  interface DrawAction
+  class UndoManager
+}
+package "io (файлы .draw)" as io #F2F2F2 {
+  class DrawingFile
+  class ShapeWriter
+}
+package "model (МОДЕЛЬ)" as model #FFF8E1 {
+  class Drawing
+  class Selection
+  abstract class Shape
+  interface ShapeVisitor
+  interface DrawingListener
+}
+
+gui --> controller : команды пользователя
+gui ..> model : читает, подписывается
+controller --> actions
+controller --> io
+controller --> model
+actions --> model
+io --> model
+
+note bottom of model
+  Модель не зависит ни от одного другого пакета программы
+  и не использует Swing / Graphics / JOptionPane
+  (из java.awt — только классы-значения Point, Color, Font).
+  Все стрелки направлены К модели, циклов нет.
+end note
+@enduml

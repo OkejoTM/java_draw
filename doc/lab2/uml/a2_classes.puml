@@ -1,0 +1,157 @@
+@startuml
+!include _style.iuml
+title ПОСЛЕ: диаграмма классов
+left to right direction
+
+package model #FFF8E1 {
+  abstract class Shape {
+    - point1 : Point
+    - point2 : Point
+    - color : Color
+    - strokeWidth : double
+    - listeners : List<ShapeListener>
+    + {abstract} accept(v : ShapeVisitor)
+    + addShapeListener(l) / removeShapeListener(l)
+    # fireShapeChanged()
+    + getPoint1() / getPoint2() : Point <<копия>>
+    + getPosition() / getSize() : Point
+    + includes(p : Point) : boolean
+    + move(dx, dy)
+    + setColor(c) / setPoint1(p) / setPoint2(p)
+  }
+  abstract class FillableShape {
+    - filled : boolean
+    + isFilled() : boolean
+    + setFilled(f : boolean)
+  }
+  class Line
+  class Rectangle
+  class Circle
+  class Text {
+    - text : String
+    - font : Font
+    + Text(x, y, fontSize, text)
+    + getText() / getFontSize()
+    - updateBounds()
+  }
+  interface ShapeVisitor {
+    + visitLine(l)
+    + visitRectangle(r)
+    + visitCircle(c)
+    + visitText(t)
+  }
+  abstract class ShapeVisitorAdapter {
+    + visitFillable(s : FillableShape)
+  }
+  interface ShapeListener {
+    + shapeChanged(s : Shape)
+  }
+  interface DrawingListener {
+    + drawingChanged(e : DrawingEvent)
+  }
+  interface SelectionListener {
+    + selectionChanged(s : Selection)
+  }
+  class DrawingEvent {
+    - type : Type
+    - shape : Shape
+  }
+  class Drawing {
+    - shapes : List<Shape>
+    - listeners : List<DrawingListener>
+    - width, height, modCount : int
+    + insertShape(s) / insertShape(i, s)
+    + removeShape(s)
+    + raise(s) / lower(s)
+    + reset(w, h)
+    + getShapeAt(p) : Shape
+    + iterator() : Iterator<Shape>
+  }
+  class "Drawing.ShapeIterator" as SI
+  class Selection {
+    - selected : List<Shape>
+    - listeners : List<SelectionListener>
+    + add(s) / remove(s) / clear()
+    + toList() : List<Shape>
+    + iterator() : Iterator<Shape>
+  }
+}
+Shape <|-- FillableShape
+Shape <|-- Line
+Shape <|-- Text
+FillableShape <|-- Rectangle
+FillableShape <|-- Circle
+ShapeVisitor <|.. ShapeVisitorAdapter
+ShapeListener <|.. Drawing
+DrawingListener <|.. Selection
+Drawing o-- "*" Shape
+Drawing +-- SI
+Selection o-- "*" Shape
+Shape o-- "*" ShapeListener
+Drawing o-- "*" DrawingListener
+Selection o-- "*" SelectionListener
+
+package controller #EAF7EA {
+  class DrawingController {
+    - drawing : Drawing
+    - selection : Selection
+    - undoManager : UndoManager
+    - tool : Tool
+    + startShape(p, color, filled) : Shape
+    + addText(p, text, size, color)
+    + selectAt(p, extend) : Shape
+    + colorSelectedShapes(c)
+    + setFilledSelectedShapes(f)
+    + deleteSelectedShapes()
+    + undo() / redo()
+    + newDrawing(w, h) / open(f) / save(f)
+  }
+  enum Tool
+}
+package actions {
+  interface DrawAction
+  class UndoManager
+  class "Add/Delete/Move/Color/FillAction" as Acts
+}
+DrawAction <|.. Acts
+UndoManager o-- DrawAction
+package io {
+  class DrawingFile {
+    + {static} load(f, d : Drawing)
+    + {static} save(f, d : Drawing)
+  }
+  class ShapeWriter
+}
+ShapeVisitor <|.. ShapeWriter
+
+package gui #EEF3FB {
+  class DrawGUI <<JFrame>>
+  class DrawingPanel <<JPanel>> {
+    + getImage() : BufferedImage
+    # paintComponent(g)
+  }
+  class ShapePainter {
+    + paint(s : Shape)
+    + paintSelectionIndicator(s)
+  }
+  class MouseListener
+  class MenuListener
+  class ToolBox {
+    - color : Color
+    + showProperties(s, withFill)
+  }
+}
+DrawingListener <|.. DrawingPanel
+SelectionListener <|.. DrawingPanel
+DrawingListener <|.. DrawGUI
+ShapeVisitor <|.. ShapePainter
+DrawingPanel ..> ShapePainter
+DrawingController --> Drawing
+DrawingController --> Selection
+DrawingController --> UndoManager
+DrawingController ..> DrawingFile
+MouseListener --> DrawingController
+MenuListener --> DrawingController
+ToolBox --> DrawingController
+Acts --> Drawing
+@enduml

@@ -1,0 +1,77 @@
+@startuml
+!include _style.iuml
+title ПОСЛЕ: паттерн Издатель–Подписчик в Модели
+
+package model #FFF8E1 {
+  interface ShapeListener <<Subscriber>> {
+    + shapeChanged(s : Shape)
+  }
+  interface DrawingListener <<Subscriber>> {
+    + drawingChanged(e : DrawingEvent)
+  }
+  interface SelectionListener <<Subscriber>> {
+    + selectionChanged(s : Selection)
+  }
+  abstract class Shape <<Publisher>> {
+    - listeners : List<ShapeListener>
+    + addShapeListener(l)
+    + removeShapeListener(l)
+    # fireShapeChanged()
+  }
+  class Drawing <<Publisher, Subscriber>> {
+    - listeners : List<DrawingListener>
+    + addDrawingListener(l)
+    + removeDrawingListener(l)
+    - fire(type, shape)
+    + shapeChanged(s)
+  }
+  class Selection <<Publisher, Subscriber>> {
+    - listeners : List<SelectionListener>
+    + addSelectionListener(l)
+    + removeSelectionListener(l)
+    - fireSelectionChanged()
+    + drawingChanged(e)
+  }
+  class DrawingEvent {
+    + getType() : Type
+    + getShape() : Shape
+    + getSource() : Drawing
+  }
+  enum "DrawingEvent.Type" as T {
+    SHAPE_ADDED
+    SHAPE_REMOVED
+    SHAPE_CHANGED
+    ORDER_CHANGED
+    DRAWING_RESET
+  }
+}
+package gui #EEF3FB {
+  class DrawingPanel <<Subscriber>> {
+    + drawingChanged(e) → repaint()
+    + selectionChanged(s) → repaint()
+  }
+  class DrawGUI <<Subscriber>> {
+    + drawingChanged(e) → pack() при RESET
+  }
+}
+
+Shape o--> "*" ShapeListener
+Drawing o--> "*" DrawingListener
+Selection o--> "*" SelectionListener
+ShapeListener <|.. Drawing
+DrawingListener <|.. Selection
+DrawingListener <|.. DrawingPanel
+SelectionListener <|.. DrawingPanel
+DrawingListener <|.. DrawGUI
+DrawingListener ..> DrawingEvent
+DrawingEvent +-- T
+
+note right of Drawing
+  Цепочка: Shape → Drawing → (DrawingPanel, DrawGUI, Selection).
+  Drawing подписывается на каждую добавленную фигуру и
+  отписывается при удалении; изменения фигур
+  републикуются как SHAPE_CHANGED.
+  Selection сама удаляет фигуры, исчезнувшие из рисунка.
+  Ни контроллер, ни действия больше не вызывают repaint().
+end note
+@enduml

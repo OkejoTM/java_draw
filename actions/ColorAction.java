@@ -1,41 +1,45 @@
 package actions;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
-import shapes.Shape;
+import model.Shape;
 
 /**
- * DeleteAction implements a single undoable action where the color of a Shape
- * are changed.
+ * ColorAction implements a single undoable action where the color of a group
+ * of Shapes is changed.
  */
-
 public class ColorAction implements DrawAction {
 
-	Shape shape;
-
-	Color oldColor;
-	Color newColor;
+	private final List<Shape> shapes;
+	private final List<Color> oldColors = new ArrayList<Color>();
+	private final Color newColor;
 
 	/**
-	 * Creates an ColorAction that changes the color of a given Shape.
+	 * Creates a ColorAction that changes the color of the given Shapes.
 	 * 
-	 * @param s
-	 *            the shape to be modified.
+	 * @param shapes
+	 *            the shapes to be modified.
 	 * @param newColor
-	 *            the new color for the shape.
+	 *            the new color for the shapes.
 	 */
-	public ColorAction(Shape s, Color newColor) {
-		shape = s;
-		this.oldColor = s.getColor();
+	public ColorAction(List<Shape> shapes, Color newColor) {
+		this.shapes = new ArrayList<Shape>(shapes);
+		for (Shape s : this.shapes) {
+			oldColors.add(s.getColor());
+		}
 		this.newColor = newColor;
 	}
 
 	public void execute() {
-		shape.setColor(newColor);
+		for (Shape s : shapes) {
+			s.setColor(newColor);
+		}
 	}
 
 	public String getDescription() {
-		return null;
+		return "Change color";
 	}
 
 	public void redo() {
@@ -43,7 +47,9 @@ public class ColorAction implements DrawAction {
 	}
 
 	public void undo() {
-		shape.setColor(oldColor);
+		for (int i = 0; i < shapes.size(); i++) {
+			shapes.get(i).setColor(oldColors.get(i));
+		}
 	}
 
 }

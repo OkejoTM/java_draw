@@ -1,0 +1,28 @@
+@startuml
+!pragma teoz true
+skinparam dpi 150
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+skinparam noteBackgroundColor #FFF4D6
+title ДО: отмена действия (Ctrl+Z) — перерисовка вызывается вручную
+
+actor Пользователь
+participant "MenuListener" as ML
+participant "DrawingController" as C
+participant "UndoManager" as UM
+participant "AddAction" as A
+participant "Drawing\n(JPanel)" as D
+
+Пользователь -> ML : actionPerformed("Undo")
+ML -> C : undo()
+C -> UM : undo()
+UM -> A : undo()
+A -> D : removeShape(s)
+C -> D : <color:red>repaint()</color>
+note right of C
+  Контроллер должен «знать», что после изменения
+  модели нужно перерисовать вид. Забыли repaint() —
+  экран не обновится (так, например, colorSelectedShapes()
+  сам не перерисовывает — repaint() вызывает ToolBox).
+end note
+@enduml

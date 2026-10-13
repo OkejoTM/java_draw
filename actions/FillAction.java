@@ -1,39 +1,57 @@
 package actions;
 
-import logic.Selection;
-import shapes.FillableShape;
-import shapes.Shape;
+import java.util.ArrayList;
+import java.util.List;
+
+import model.FillableShape;
+import model.Shape;
+import model.ShapeVisitorAdapter;
 
 /**
- * FillAction implements a undoable action where the fill status of all the
- * Shapes in a given Selection are toggled.
+ * FillAction implements an undoable action where the fill status of all the
+ * fillable Shapes in a given group is set.
  */
 public class FillAction implements DrawAction {
 
-	Selection selected;
+	private final List<FillableShape> shapes = new ArrayList<FillableShape>();
+	private final List<Boolean> oldStates = new ArrayList<Boolean>();
+	private final boolean filled;
 
 	/**
-	 * Creates a FillAction that filps the fill status of all FillableShape
-	 * instances in the given selection.
+	 * Creates a FillAction that sets the fill status of all fillable shapes in
+	 * the given group. Other shapes (lines, texts) are ignored.
 	 * 
-	 * @param s
-	 *            a selection which contains the shapes to be modified
+	 * @param group
+	 *            the shapes to be modified
+	 * @param filled
+	 *            the new fill status
 	 */
-	public FillAction(Selection s) {
-		this.selected = s.clone();
+	public FillAction(List<Shape> group, boolean filled) {
+		this.filled = filled;
+		ShapeVisitorAdapter collector = new ShapeVisitorAdapter() {
+			@Override
+			public void visitFillable(FillableShape s) {
+				shapes.add(s);
+				oldStates.add(s.isFilled());
+			}
+		};
+		for (Shape s : group) {
+			s.accept(collector);
+		}
 	}
 
 	public void execute() {
-		for (Shape s : selected) {
-			if (s instanceof FillableShape) {
-				FillableShape fs = (FillableShape) s;
-				fs.setFilled(!(fs).getFilled());
-			}
+		for (FillableShape s : shapes) {
+			s.setFilled(filled);
 		}
 	}
 
 	public String getDescription() {
-		return null;
+		return filled ? "Fill shapes" : "Unfill shapes";
+	}
+
+	public boolean isEmpty() {
+		return shapes.isEmpty();
 	}
 
 	public void redo() {
@@ -41,7 +59,9 @@ public class FillAction implements DrawAction {
 	}
 
 	public void undo() {
-		execute();
+		for (int i = 0; i < shapes.size(); i++) {
+			shapes.get(i).setFilled(oldStates.get(i));
+		}
 	}
 
 }

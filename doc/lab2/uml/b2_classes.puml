@@ -1,0 +1,131 @@
+@startuml
+!include _style.iuml
+title ДО: диаграмма классов
+left to right direction
+
+package shapes {
+  abstract class Shape {
+    # point1 : Point
+    # point2 : Point
+    # color : Color
+    # strokeWidth : double
+    # selected : boolean
+    + draw(g : Graphics)
+    + drawSelectionIndicator(g : Graphics)
+    + {abstract} drawShape(g : Graphics)
+    + includes(p : Point) : boolean
+    + move(x : int, y : int)
+    + setPoint1(p : Point)
+    + setPoint2(p : Point)
+    + setSelected(b : boolean)
+    + toString() : String
+  }
+  abstract class FillableShape {
+    # filled : boolean
+    + {abstract} drawFilled(g : Graphics)
+    + {abstract} drawNonFilled(g : Graphics)
+    + getFilled() : boolean
+    + setFilled(f : boolean)
+  }
+  class Line
+  class Rectangle
+  class Circle
+  class Text {
+    - text : String
+    - font : Font
+    + Text(x, y, fontSize)  <<JOptionPane>>
+    + drawShape(g)  <<меняет point2>>
+  }
+}
+Shape <|-- FillableShape
+Shape <|-- Line
+Shape <|-- Text
+FillableShape <|-- Rectangle
+FillableShape <|-- Circle
+
+package logic {
+  class Drawing <<JPanel>> {
+    - shapes : ArrayList<Shape>
+    + insertShape(s)
+    + removeShape(s)
+    + raise(s) / lower(s)
+    + getShapeAt(p) : Shape
+    + iterator() : Iterator<Shape>
+    + listShapes()  <<System.out>>
+    + paintComponent(g)
+    + getImage() : BufferedImage
+  }
+  class Selection {
+    - selected : ArrayList<Shape>
+    + add(s) / empty()
+    + clone() : Selection
+    + iterator() : Iterator<Shape>
+  }
+  class DrawingController {
+    - drawing : Drawing
+    - gui : DrawGUI
+    - undoManager : UndoManager
+    - selection : Selection
+    - tool : Tool
+    + newDrawing(size : Dimension)
+    + undo() / redo()  <<repaint()>>
+    + toggleFilled()
+  }
+  class DrawIO {
+    + open(f, c : DrawingController)
+    + save(f, c : DrawingController)
+    + export(f, c : DrawingController)
+  }
+  enum Tool {
+    CIRCLE
+    SQUARE
+    RECTANGLE
+    TEXT
+    LINE
+    SELECT
+  }
+}
+
+package actions {
+  interface DrawAction {
+    + execute()
+    + undo()
+    + redo()
+    + getDescription() : String
+  }
+  class UndoManager
+  class AddAction
+  class DeleteAction
+  class MoveAction
+  class ColorAction
+  class FillAction
+}
+DrawAction <|.. AddAction
+DrawAction <|.. DeleteAction
+DrawAction <|.. MoveAction
+DrawAction <|.. ColorAction
+DrawAction <|.. FillAction
+UndoManager o-- DrawAction
+
+package gui {
+  class DrawGUI <<JFrame>>
+  class MouseListener <<MouseAdapter>>
+  class MenuListener <<ActionListener>>
+  class ToolBox <<JToolBar>> {
+    + color : Color
+  }
+}
+
+Drawing o-- "*" Shape
+Selection o-- "*" Shape
+DrawingController --> Drawing
+DrawingController --> Selection
+DrawingController --> UndoManager
+DrawingController --> DrawGUI
+DrawGUI --> DrawingController
+MouseListener --> DrawingController
+MenuListener --> DrawingController
+MenuListener ..> DrawIO
+ToolBox --> DrawingController
+DrawIO ..> DrawingController
+@enduml

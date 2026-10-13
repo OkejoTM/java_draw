@@ -1,0 +1,55 @@
+@startuml
+!include _style.iuml
+title ДО: пакеты и зависимости
+
+package "gui" as gui #EEF3FB {
+  class DrawGUI
+  class MenuListener
+  class MouseListener
+  class ToolBox
+  class MainMenu
+}
+package "logic" as logic #FDECEC {
+  class Drawing <<JPanel>>
+  class DrawingController
+  class Selection
+  class DrawIO
+  enum Tool
+}
+package "shapes" as shapes #FDECEC {
+  abstract class Shape
+}
+package "actions" as actions #F2F2F2 {
+  interface DrawAction
+  class UndoManager
+}
+package "javax.swing / java.awt" as swing #E8E8E8 {
+  class JPanel
+  class Graphics
+  class JOptionPane
+}
+
+DrawGUI --> DrawingController
+MenuListener --> DrawIO
+MouseListener --> Shape : new Rectangle()...
+DrawingController --> DrawGUI : <color:red>gui.updateDrawing()</color>
+DrawingController --> actions
+actions --> Drawing
+Drawing --|> JPanel
+Shape ..> Graphics : draw(Graphics)
+shapes ..> JOptionPane : Text()
+DrawIO ..> JOptionPane
+
+note bottom of logic
+  <b>Проблемы:</b>
+  * нет отдельного пакета «Модель»: модель, контроллер и ввод-вывод
+    смешаны в пакете logic
+  * Drawing (модель) наследует JPanel — это одновременно и модель, и вид
+  * циклическая зависимость logic <-> gui (DrawingController -> DrawGUI)
+  * DrawIO показывает диалоги JOptionPane
+end note
+note bottom of shapes
+  Фигуры рисуют сами себя через java.awt.Graphics,
+  Text в конструкторе открывает JOptionPane
+end note
+@enduml

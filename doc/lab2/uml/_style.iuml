@@ -1,12 +1,33 @@
-!pragma layout smetana
 skinparam dpi 150
 skinparam shadowing false
+skinparam roundCorner 10
 skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 12
+skinparam titleFontSize 15
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
-skinparam noteBackgroundColor #FFF4D6
-skinparam noteBorderColor #C9A227
-skinparam classBackgroundColor #FFFFFF
-skinparam classBorderColor #444444
-skinparam ArrowColor #333333
+skinparam nodesep 40
+skinparam ranksep 50
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #5B6B7F
+  HeaderBackgroundColor #F4F7FB
+  ArrowColor #4A5568
+  StereotypeFontColor #6B7280
+}
+skinparam package {
+  BorderColor #8A97A8
+  FontColor #2D3748
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #D4B24C
+}
+skinparam sequence {
+  ArrowColor #4A5568
+  LifeLineBorderColor #8A97A8
+  ParticipantBorderColor #5B6B7F
+  ParticipantBackgroundColor #F4F7FB
+}
 hide empty members

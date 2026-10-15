@@ -75,9 +75,8 @@ public class MenuListener implements ActionListener {
 			fileDialog.addChoosableFileFilter(filter);
 			fileDialog.setFileFilter(filter);
 
-			fileDialog.showOpenDialog(null);
-			File f = fileDialog.getSelectedFile();
-			if (f != null) {
+			if (fileDialog.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				File f = fileDialog.getSelectedFile();
 				try {
 					controller.open(f);
 				}
@@ -98,10 +97,8 @@ public class MenuListener implements ActionListener {
 			fileDialog.addChoosableFileFilter(filter);
 			fileDialog.setFileFilter(filter);
 
-			fileDialog.showSaveDialog(null);
-
-			File f = fileDialog.getSelectedFile();
-			if (f != null) {
+			if (fileDialog.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+				File f = fileDialog.getSelectedFile();
 				try {
 					controller.save(f);
 				}
@@ -120,10 +117,8 @@ public class MenuListener implements ActionListener {
 			fileDialog.addChoosableFileFilter(filter);
 
 			fileDialog.setSelectedFile(new File("out.png"));
-			fileDialog.showSaveDialog(null);
-
-			File f = fileDialog.getSelectedFile();
-			if (f != null) {
+			if (fileDialog.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+				File f = fileDialog.getSelectedFile();
 				try {
 					ImageIO.write(view.getImage(), "png", f);
 				}

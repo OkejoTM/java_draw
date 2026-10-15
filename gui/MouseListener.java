@@ -51,7 +51,7 @@ public class MouseListener extends MouseAdapter {
 		int dy = m.getPoint().y - lastPos.y;
 
 		if (newShape != null) {
-			c.resizeShape(newShape, lastPos);
+			c.resizeShape(newShape, m.getPoint());
 		}
 
 		if (c.getTool() == Tool.SELECT) {

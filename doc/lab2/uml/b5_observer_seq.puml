@@ -1,9 +1,7 @@
 @startuml
 !pragma teoz true
-skinparam dpi 150
-skinparam shadowing false
-skinparam defaultFontName DejaVu Sans
-skinparam noteBackgroundColor #FFF4D6
+!include _style.iuml
+skinparam sequenceMessageAlign left
 title ДО: отмена действия (Ctrl+Z) — перерисовка вызывается вручную
 
 actor Пользователь

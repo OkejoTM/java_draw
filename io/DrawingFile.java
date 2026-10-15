@@ -41,7 +41,13 @@ public final class DrawingFile {
 			if (header == null) {
 				throw new IOException("Empty file: " + f);
 			}
-			Point size = parsePoint(header);
+			Point size;
+			try {
+				size = parsePoint(header);
+			}
+			catch (RuntimeException e) {
+				throw new IOException("Not a drawing file: " + f);
+			}
 			drawing.reset(size.x, size.y);
 
 			String str;
